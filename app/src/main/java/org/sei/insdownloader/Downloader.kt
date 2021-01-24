@@ -20,15 +20,16 @@ import java.util.regex.Pattern
 class Downloader(private val callback: DownloadCallback, private val context: Context) {
 
     companion object {
-        var queryHash = ""
+        var queryHash = "003056d32c2554def87228bc3fd9668a"
         var csrftoken = ""
         var sessionID = ""
     }
 
     init {
         queryHash =
-            context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("queryHash", "")
-                ?: ""
+            context.getSharedPreferences("config", Context.MODE_PRIVATE)
+                .getString("queryHash", "003056d32c2554def87228bc3fd9668a")
+                ?: "003056d32c2554def87228bc3fd9668a"
         csrftoken =
             context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("csrftoken", "")
                 ?: ""
@@ -37,7 +38,8 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                 ?: ""
     }
 
-    private var task = Task(time = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date()))
+    private var task =
+        Task(time = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date()))
 
     private val requestBuilder by lazy { Request.Builder() }
 
@@ -124,17 +126,19 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
         task.isCompleted = false
         callback.startForeground()
 
-        val request = requestBuilder
-            .url(url)
-            .addHeader("Connection", "keep-alive")
-            .addHeader(
+        val request = requestBuilder.run {
+            url(url)
+            addHeader("Connection", "keep-alive")
+            addHeader(
                 "User-Agent",
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:76.0) Gecko/20100101 Firefox/76.0"
             )
-            .addHeader("Referer", "https://www.instagram.com/")
-            .addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
-            .get()
-            .build()
+            addHeader("Referer", "https://www.instagram.com/")
+            if (csrftoken != "" && sessionID != "") {
+                addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
+            }
+            build()
+        }
         client.newCall(request).enqueue(DownAllCallback())
     }
 
@@ -169,15 +173,19 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             "https://www.instagram.com/graphql/query/?query_hash=$queryHash&variables={\"id\":\"${task.userID}\",\"first\":${task.first},\"after\":\"${task.endCursor}\"}"
         println("query url  $query")
 
-        val request = requestBuilder
-            .url(query)
-            .addHeader("Connection", "keep-alive")
-            .addHeader(
+        val request = requestBuilder.run {
+            url(query)
+            addHeader("Connection", "keep-alive")
+            addHeader(
                 "User-Agent",
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:76.0) Gecko/20100101 Firefox/76.0"
             )
-            .addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
-            .build()
+            addHeader("Referer", "https://www.instagram.com/")
+            if (csrftoken != "" && sessionID != "") {
+                addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
+            }
+            build()
+        }
         client.newCall(request).enqueue(GetOtherPostUrlCallback())
     }
 
@@ -262,8 +270,9 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                                 task.urls = list
                             }
                             if (list.isNullOrEmpty()) {
+                                task.isCompleted = true
                                 handler.sendMessage(Message.obtain().apply {
-                                    obj = "没有发现图片"
+                                    obj = "未发现图片 或 未登陆"
                                 })
                             } else {
                                 val patternUser =
@@ -393,7 +402,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         if (matcher1.find()) {
                             task.user = matcher1.group(1) ?: ""
                             if (task.user.equals("accounts/login") || task.user.equals("")) {
-                                callback.sendMessage("登录状态已失效！")
+                                callback.sendMessage("未登陆 或 登录状态已失效！")
                                 task.isCompleted = true
                                 return
                             } else {
@@ -402,7 +411,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                             }
                         } else {
                             println("未找到用户！")
-                            callback.sendMessage("登录状态已失效！")
+                            callback.sendMessage("未登陆 或 登录状态已失效！")
                             task.isCompleted = true
                             return
                         }
