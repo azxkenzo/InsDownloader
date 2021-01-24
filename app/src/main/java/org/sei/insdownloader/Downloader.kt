@@ -19,14 +19,17 @@ import java.util.regex.Pattern
 
 class Downloader(private val callback: DownloadCallback, private val context: Context) {
 
-    // query_hash: bfa387b2992c3a52dcbe447467b4b771  e769aa130647d2354c40ea6a439bfc08  c699b185975935ae2a457f24075de8c7
-    private val queryHash = "003056d32c2554def87228bc3fd9668a"
+    companion object {
+        var queryHash = ""
+        var csrftoken = ""
+        var sessionID = ""
+    }
 
-    // V66zAaAueYq0eBVAWT0LlGiMRob4dCvk
-    private var csrftoken = "e6ombjgaBVCZ96Le8kXSS40qqIRe7VLO"
-
-    // 29570804887:x0zRpvPMtauq5K:22  29570804887%3Ax0zRpvPMtauq5K%3A22
-    private var sessionID = "9152946067:6IlTiDGz06vP1t:8"
+    init {
+        queryHash = context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("queryHash", "") ?: ""
+        csrftoken = context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("csrftoken", "") ?: ""
+        sessionID = context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("sessionID", "") ?: ""
+    }
 
     private var task = Task()
 
