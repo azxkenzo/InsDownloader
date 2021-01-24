@@ -26,12 +26,18 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
     }
 
     init {
-        queryHash = context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("queryHash", "") ?: ""
-        csrftoken = context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("csrftoken", "") ?: ""
-        sessionID = context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("sessionID", "") ?: ""
+        queryHash =
+            context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("queryHash", "")
+                ?: ""
+        csrftoken =
+            context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("csrftoken", "")
+                ?: ""
+        sessionID =
+            context.getSharedPreferences("config", Context.MODE_PRIVATE).getString("sessionID", "")
+                ?: ""
     }
 
-    private var task = Task()
+    private var task = Task(time = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date()))
 
     private val requestBuilder by lazy { Request.Builder() }
 
@@ -82,7 +88,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             return
         }
 
-        task = Task()
+        task = Task(time = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date()))
         task.isCompleted = false
 
         val request = requestBuilder
@@ -114,7 +120,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             return
         }
 
-        task = Task()
+        task = Task(time = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date()))
         task.isCompleted = false
         callback.startForeground()
 
@@ -186,11 +192,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             try {
                 when (response.code) {
                     200 -> {
-                        val fileName =
-                            SimpleDateFormat(
-                                "yyyyMMddHHmmssSSS",
-                                Locale.CHINA
-                            ).format(Date()) + "_$index.jpg"
+                        val fileName = task.time + "_$index.jpg"
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val relativeLocation =
@@ -479,11 +481,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             try {
                 when (response.code) {
                     200 -> {
-                        val fileName =
-                            SimpleDateFormat(
-                                "yyyyMMddHHmmssSSS",
-                                Locale.CHINA
-                            ).format(Date()) + "_$index.jpg"
+                        val fileName = task.time + "_$index.jpg"
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val relativeLocation =

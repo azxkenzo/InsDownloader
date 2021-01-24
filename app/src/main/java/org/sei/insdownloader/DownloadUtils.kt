@@ -22,6 +22,7 @@ data class Task(
     var postCount: Int = 0,
     var completed: Int = 0,
     var isCompleted: Boolean = true,
+    var time: String,
 ) {
     @Synchronized
     fun completedOne(): Boolean {
