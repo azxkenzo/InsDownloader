@@ -93,16 +93,19 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
         task = Task(time = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date()))
         task.isCompleted = false
 
-        val request = requestBuilder
-            .url(url)
-            .addHeader("Connection", "keep-alive")
-            .addHeader(
+        val request = requestBuilder.run {
+            url(url)
+            addHeader("Connection", "keep-alive")
+            addHeader(
                 "User-Agent",
                 "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:82.0) Gecko/20100101 Firefox/82.0"
             )
-            .addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID;")
-            .get()
-            .build()
+            addHeader("Referer", "https://www.instagram.com/")
+            if (csrftoken != "" && sessionID != "") {
+                addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
+            }
+            build()
+        }
         client.newCall(request).enqueue(DownSingleCallback())
 
     }
@@ -131,7 +134,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             addHeader("Connection", "keep-alive")
             addHeader(
                 "User-Agent",
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:76.0) Gecko/20100101 Firefox/76.0"
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:82.0) Gecko/20100101 Firefox/82.0"
             )
             addHeader("Referer", "https://www.instagram.com/")
             if (csrftoken != "" && sessionID != "") {
@@ -178,7 +181,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             addHeader("Connection", "keep-alive")
             addHeader(
                 "User-Agent",
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:76.0) Gecko/20100101 Firefox/76.0"
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:82.0) Gecko/20100101 Firefox/82.0"
             )
             addHeader("Referer", "https://www.instagram.com/")
             if (csrftoken != "" && sessionID != "") {
@@ -272,7 +275,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                             if (list.isNullOrEmpty()) {
                                 task.isCompleted = true
                                 handler.sendMessage(Message.obtain().apply {
-                                    obj = "未发现图片 或 未登陆"
+                                    obj = "未发现图片 或 未登陆 或 为私密账户"
                                 })
                             } else {
                                 val patternUser =

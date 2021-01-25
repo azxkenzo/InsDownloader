@@ -101,7 +101,7 @@ class LoginActivity : AppCompatActivity() {
                     //println(sessionidMatcher.group(1))
                     Downloader.sessionID = sessionidMatcher.group(1) ?: ""
                     context.getSharedPreferences("config", Context.MODE_PRIVATE).edit {
-                        putString("sessionID", csrftokenMatcher.group(1))
+                        putString("sessionID", sessionidMatcher.group(1))
                         commit()
                     }
                 }
