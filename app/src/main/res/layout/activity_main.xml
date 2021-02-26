@@ -12,14 +12,14 @@
         android:layout_height="?actionBarSize"
         android:background="@color/actionBarColor"
         app:layout_constraintTop_toTopOf="parent"
-        app:title="Ins下载助手" />
+        app:title="@string/app_name" />
 
     <include
         android:id="@+id/card_down_single"
         layout="@layout/card_down_single"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
+        android:layout_marginHorizontal="12dp"
         android:layout_marginTop="24dp"
         app:layout_constraintTop_toBottomOf="@id/toolbar" />
 
@@ -28,7 +28,7 @@
         layout="@layout/card_down_all"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginHorizontal="24dp"
+        android:layout_marginHorizontal="12dp"
         android:layout_marginTop="20dp"
         app:layout_constraintTop_toBottomOf="@id/card_down_single" />
 

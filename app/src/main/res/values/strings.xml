@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">InsDownloader</string>
+
+    <string name="btn_download_txt">DOWNLOAD</string>
+    <string name="download_single_txt">Download pictures of single post</string>
+    <string name="download_all_txt">Download pictures of all posts</string>
+    <string name="profile_url">Profile URL</string>
+    <string name="download_complete">Download completed</string>
 </resources>

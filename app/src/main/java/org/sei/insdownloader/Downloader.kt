@@ -159,14 +159,16 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             }
             else -> {
                 callback.sendMessage("一共发现了 ${task.urls.size} 张图片......\n 开始下载......")
-                for (i in 0..20) {
+                task.urls = task.urls.reversed()
+                client.newCall(requestBuilder.url(task.urls[0]).build()).enqueue(SaveImgInAllCallback(0))
+                /*for (i in 0..20) {
                     if (i < task.urls.size) {
                         client.newCall(requestBuilder.url(task.urls[i]).build())
                             .enqueue(SaveImgInAllCallback(i))
                     } else {
                         break
                     }
-                }
+                }*/
 
                 return
             }
@@ -228,7 +230,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 
                         if (task.completedOne()) {
                             handler.sendMessage(Message.obtain().apply {
-                                obj = "下载完成！"
+                                obj = context.resources.getString(R.string.download_complete)
                             })
                         }
                     }
@@ -517,30 +519,38 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         }
 
                         if (task.completedOne()) {
-                            callback.sendMessage("下载完成......")
+                            callback.sendMessage("${context.resources.getString(R.string.download_complete)}......")
                             callback.stopForeground()
                         }
                         callback.sendProgress(task.completed)
 
-                        if (index + 21 < task.urls.size) {
+                        if (index + 1 < task.urls.size) {
+                            client.newCall(requestBuilder.url(task.urls[index + 1]).build())
+                                .enqueue(SaveImgInAllCallback(index + 1))
+                        }
+                        /*if (index + 21 < task.urls.size) {
                             client.newCall(requestBuilder.url(task.urls[index + 21]).build())
                                 .enqueue(SaveImgInAllCallback(index + 21))
-                        }
+                        }*/
                     }
 
                     410 -> {  // Gone
                         callback.sendMessage("下载第 $index 张图片 失败：410 Gone")
                         println("下载第 $index 张图片 发生错误：410 Gone")
                         if (task.completedOne()) {
-                            callback.sendMessage("下载完成......")
+                            callback.sendMessage("${context.resources.getString(R.string.download_complete)}......")
                             callback.stopForeground()
                         }
                         callback.sendProgress(task.completed)
 
-                        if (index + 21 < task.urls.size) {
+                        if (index + 1 < task.urls.size) {
+                            client.newCall(requestBuilder.url(task.urls[index + 1]).build())
+                                .enqueue(SaveImgInAllCallback(index + 1))
+                        }
+                        /*if (index + 21 < task.urls.size) {
                             client.newCall(requestBuilder.url(task.urls[index + 21]).build())
                                 .enqueue(SaveImgInAllCallback(index + 21))
-                        }
+                        }*/
                     }
 
                     429 -> {  // 429 Too Many Requests
@@ -553,6 +563,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     else -> {
                         callback.sendMessage("下载第 $index 张图片 失败：${response.code}")
                         println("下载第 $index 张图片 发生错误：${response.code}")
+                        client.newCall(call.request()).enqueue(SaveImgInAllCallback(index))
                     }
                 }
             } catch (e: Exception) {

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ins下载助手</string>
+
+    <string name="btn_download_txt">下载</string>
+    <string name="download_single_txt">下载单个Post下的图片</string>
+    <string name="download_all_txt">下载所有Post下的图片</string>
+    <string name="profile_url">个人主页网址</string>
+    <string name="download_complete">下载完成</string>
+</resources>

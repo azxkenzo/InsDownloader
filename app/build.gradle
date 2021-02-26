@@ -11,8 +11,8 @@ android {
         applicationId "org.sei.insdownloader"
         minSdkVersion 26
         targetSdkVersion 30
-        versionCode 1001
-        versionName "1.01"
+        versionCode 11002
+        versionName "11.02"
 
         ndk.abiFilters 'arm64-v8a'
 
