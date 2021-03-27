@@ -6,9 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.ServiceConnection
 import android.content.pm.PackageManager
-import android.os.Handler
-import android.os.IBinder
-import android.os.Looper
+import android.os.*
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.method.ScrollingMovementMethod
@@ -60,6 +58,9 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                 })
 
                 cardDownSingle.btnDownSingle.setOnClickListener {
+                    val vibrator = it.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    vibrator.vibrate(VibrationEffect.createOneShot(10L, 150))
+
                     if (a.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
@@ -206,6 +207,22 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                 it.viewBinding.cardDownAll.logcat.append("$msg \n")
                 mHandler.postDelayed(logcat, 20L)
                 log = it.viewBinding.cardDownAll.logcat.text.toString()
+            }
+        }
+    }
+
+    override fun sendSingleCount(c: Int) {
+        activity.get()?.let {
+            it.runOnUiThread {
+                it.viewBinding.cardDownSingle.btnDownSingle.setMax(c)
+            }
+        }
+    }
+
+    override fun sendSingleProgress(p: Int) {
+        activity.get()?.let {
+            it.runOnUiThread {
+                it.viewBinding.cardDownSingle.btnDownSingle.setProgress(p)
             }
         }
     }

@@ -114,4 +114,12 @@ class DownloadServiceImpl(private val service: DownloadService) : Binder(), Down
         log.append(msg)
     }
 
+    override fun sendSingleCount(c: Int) {
+        downCallback?.sendSingleCount(c)
+    }
+
+    override fun sendSingleProgress(p: Int) {
+        downCallback?.sendSingleProgress(p)
+    }
+
 }

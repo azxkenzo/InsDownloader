@@ -18,7 +18,7 @@ class DownloadService : Service() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    override fun onBind(intent: Intent?): IBinder? = impl
+    override fun onBind(intent: Intent?): IBinder = impl
 
     override fun onUnbind(intent: Intent?): Boolean {
         impl.onUnbind()

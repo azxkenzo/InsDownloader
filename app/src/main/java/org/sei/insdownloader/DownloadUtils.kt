@@ -10,20 +10,29 @@ import android.os.Environment
 import android.provider.MediaStore
 import android.text.TextUtils
 import java.io.*
+import java.text.SimpleDateFormat
+import java.util.*
 
 val rootPath = Environment.getExternalStorageDirectory().absolutePath
 
+enum class TaskType {
+    SingleTask,
+    AllTask
+}
+
 data class Task(
     var urls: List<String> = listOf(),
-    var user: String = "",
+    var user: String = "unknown",
     var endCursor: String? = "",
     var first: Int = 0,
     var userID: String = "",
     var postCount: Int = 0,
     var completed: Int = 0,
     var isCompleted: Boolean = true,
-    var time: String,
+
 ) {
+    val time: String = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date());
+
     @Synchronized
     fun completedOne(): Boolean {
         if (++completed == urls.size) {

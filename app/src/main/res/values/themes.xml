@@ -18,7 +18,6 @@
     </style>
 
 
-
     <style name="Widget.Shrine.TextInputLayout" parent="Widget.MaterialComponents.TextInputLayout.OutlinedBox">
         <item name="hintTextAppearance">@style/TextAppearance.Shrine.TextInputLayout.HintText</item>
         <item name="android:paddingBottom">8dp</item>
@@ -31,4 +30,6 @@
     <color name="titleColor">#FF000000</color>
     <color name="actionBarColor">#FFF8F8F8</color>
     <color name="logcat_bg_color">#FFD8D8D8</color>
+
+    <dimen name="buttonTextSize">14sp</dimen>
 </resources>
