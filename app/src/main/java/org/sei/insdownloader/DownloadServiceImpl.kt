@@ -13,8 +13,9 @@ class DownloadServiceImpl(private val service: DownloadService) : Binder(), Down
 
     private val downloader by lazy { Downloader(this, service.applicationContext) }
 
-    fun onCreate() {
+    private val twitterDownloader by lazy { TwitterDownloader(service.applicationContext, this) }
 
+    fun onCreate() {
         (service.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).run {
             if (getNotificationChannel("download_notification") == null) {
                 val name = "下载通知"
@@ -45,6 +46,18 @@ class DownloadServiceImpl(private val service: DownloadService) : Binder(), Down
 
                 }
 
+                ACTION_TWITTER_DOWNLOAD_IMAGE -> {
+                    twitterDownloader.downloadImage(it.getStringExtra(KEY_DATA)!!)
+                }
+
+                ACTION_TWITTER_DOWNLOAD_VIDEO -> {
+                    twitterDownloader.downloadVideo(it.getStringExtra(KEY_DATA)!!)
+                }
+
+                ACTION_WEIBO_DOWNLOAD -> {
+                    twitterDownloader.weiboDownload(it.getStringExtra(KEY_DATA)!!)
+                }
+
                 else -> {
 
                 }
@@ -72,7 +85,7 @@ class DownloadServiceImpl(private val service: DownloadService) : Binder(), Down
 
     private fun createNotification(isOngoing: Boolean): Notification {
         return Notification.Builder(service, "download_notification")
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setSmallIcon(R.drawable.notification_icon)
             .setContentTitle("图片下载服务")
             .setOngoing(isOngoing)                      // 不能手动消除
             //.setContentIntent(pendingIntent)       // 主内容点击事件
@@ -83,43 +96,75 @@ class DownloadServiceImpl(private val service: DownloadService) : Binder(), Down
 
     fun setDownloadCallback(callback: DownloadCallback) {
         downCallback = callback
-        callback.sendUser(user)
-        callback.sendCount(count)
-        callback.sendProgress(progress)
-        callback.sendMessage(log.toString())
+        callback.sendInsUser(insUser)
+        callback.sendInsCount(insCount)
+        callback.sendInsProgress(insProgress)
+        callback.sendInsMessage(log.toString())
+
+        callback.sendTwitterProgress(twitterProgress)
+        callback.sendTwitterCount(twitterCount)
     }
 
-    private var count = 0
-    private var progress = 0
-    private var user = "user"
+    private var insCount = 0
+    private var insProgress = 0
+    private var insUser = "user"
     private val log = StringBuilder()
 
-    override fun sendCount(count: Int) {
-        this.count = count
-        downCallback?.sendCount(count)
+    private var twitterCount = 0
+    private var twitterProgress = 0
+
+    override fun sendInsCount(count: Int) {
+        insCount = count
+        downCallback?.sendInsCount(count)
     }
 
-    override fun sendUser(user: String) {
-        this.user = user
-        downCallback?.sendUser(user)
+    override fun sendInsUser(user: String) {
+        insUser = user
+        downCallback?.sendInsUser(user)
     }
 
-    override fun sendProgress(progress: Int) {
-        this.progress = progress
-        downCallback?.sendProgress(progress)
+    override fun sendInsProgress(progress: Int) {
+        insProgress = progress
+        downCallback?.sendInsProgress(progress)
     }
 
-    override fun sendMessage(msg: String) {
-        downCallback?.sendMessage(msg)
+    override fun sendInsMessage(msg: String) {
+        downCallback?.sendInsMessage(msg)
         log.append(msg)
     }
 
-    override fun sendSingleCount(c: Int) {
-        downCallback?.sendSingleCount(c)
+    override fun sendInsSingleCount(c: Int) {
+        downCallback?.sendInsSingleCount(c)
     }
 
-    override fun sendSingleProgress(p: Int) {
-        downCallback?.sendSingleProgress(p)
+    override fun sendInsSingleProgress(p: Int) {
+        downCallback?.sendInsSingleProgress(p)
     }
 
+    override fun sendTwitterCount(count: Int) {
+        twitterCount = count
+        downCallback?.sendTwitterCount(count)
+    }
+    override fun sendTwitterProgress(progress: Int) {
+        twitterProgress = progress
+        downCallback?.sendTwitterProgress(progress)
+    }
+
+}
+
+interface DownloadCallback {
+    fun sendInsCount(count: Int) {}
+    fun sendInsUser(user: String) {}
+    fun sendInsProgress(progress: Int) {}
+    fun sendInsMessage(msg: String) {}
+
+    fun sendInsSingleProgress(p: Int) {}
+    fun sendInsSingleCount(c: Int) {}
+
+    fun startForeground() {}
+    fun stopForeground() {}
+
+    fun sendTwitterCount(count: Int) {}
+    fun sendTwitterProgress(progress: Int) {}
+    fun sendTwitterUser(user: String) {}
 }

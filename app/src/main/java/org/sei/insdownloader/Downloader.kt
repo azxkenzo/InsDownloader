@@ -7,7 +7,6 @@ import android.os.*
 import android.widget.Toast
 import com.google.gson.Gson
 import okhttp3.*
-import okhttp3.EventListener
 import java.io.File
 import java.io.IOException
 import java.net.InetSocketAddress
@@ -52,20 +51,26 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
     private val client by lazy {
         OkHttpClient.Builder()
             .retryOnConnectionFailure(true)
-            .connectTimeout(30L, TimeUnit.SECONDS)
-            .readTimeout(30L, TimeUnit.SECONDS)
-            .writeTimeout(30L, TimeUnit.SECONDS)
+            .connectTimeout(10L, TimeUnit.SECONDS)
+            .readTimeout(50L, TimeUnit.SECONDS)
+            .writeTimeout(50L, TimeUnit.SECONDS)
+            .dispatcher(Dispatcher().apply {
+                maxRequestsPerHost = 50
+            })
+            .connectionPool(ConnectionPool().apply {
+
+            })
             .eventListener(object : EventListener() {
                 override fun callFailed(call: Call, ioe: IOException) {
-                    callback.sendMessage("callFailed: $ioe")
+                    callback.sendInsMessage("callFailed: $ioe")
                 }
 
                 override fun requestFailed(call: Call, ioe: IOException) {
-                    callback.sendMessage("requestFailed: $ioe")
+                    callback.sendInsMessage("requestFailed: $ioe")
                 }
 
                 override fun responseFailed(call: Call, ioe: IOException) {
-                    callback.sendMessage("responseFailed: $ioe")
+                    callback.sendInsMessage("responseFailed: $ioe")
                 }
 
                 override fun connectFailed(
@@ -75,7 +80,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     protocol: Protocol?,
                     ioe: IOException
                 ) {
-                    callback.sendMessage("connectFailed: $ioe")
+                    callback.sendInsMessage("connectFailed: $ioe")
                 }
             })
             .build()
@@ -93,6 +98,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
         println(url)
 
         if (!singleTask.isCompleted) {
+            println(singleTask.completed)
             return
         }
 
@@ -152,7 +158,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
     }
 
     fun getImgUrlInOtherPost() {
-        callback.sendCount(allTask.urls.size)
+        callback.sendInsCount(allTask.urls.size)
         println(allTask.postCount)
         when {
             allTask.postCount in 1..50 -> {
@@ -164,21 +170,22 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                 allTask.postCount -= 50
             }
             else -> {
-                callback.sendMessage("一共发现了 ${allTask.urls.size} 张图片......\n 开始下载......")
+                callback.sendInsMessage("一共发现了 ${allTask.urls.size} 张图片......\n 开始下载......")
                 // 顺序模式
                 allTask.urls = allTask.urls.reversed()
-                client.newCall(requestBuilder.url(allTask.urls[0]).build())
-                    .enqueue(SaveImgInAllCallback(0))
+                for (i in allTask.urls) {
+                    println(i)
+                }
+//                client.newCall(requestBuilder.url(allTask.urls[0]).build())
+//                    .enqueue(SaveImgInAllCallback(0))
+                allTask.nameFormat = allTask.urls.size
 
-                // 速度模式
-                /*for (i in 0..20) {
-                    if (i < task.urls.size) {
-                        client.newCall(requestBuilder.url(task.urls[i]).build())
-                            .enqueue(SaveImgInAllCallback(i))
-                    } else {
-                        break
-                    }
-                }*/
+                for (i in allTask.urls.indices) {
+                    client.newCall(requestBuilder.url(allTask.urls[i]).build())
+                        .enqueue(SaveImgInAllCallback(i))
+                }
+
+
 
                 return
             }
@@ -190,15 +197,15 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 
         val request = requestBuilder.run {
             url(query)
-            addHeader("Connection", "keep-alive")
-            addHeader(
-                "User-Agent",
-                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:82.0) Gecko/20100101 Firefox/82.0"
-            )
-            addHeader("Referer", "https://www.instagram.com/")
-            if (csrftoken.isNotBlank() && sessionID.isNotBlank()) {
-                addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
-            }
+//            addHeader("Connection", "keep-alive")
+//            addHeader(
+//                "User-Agent",
+//                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:82.0) Gecko/20100101 Firefox/82.0"
+//            )
+//            addHeader("Referer", "https://www.instagram.com/")
+//            if (csrftoken.isNotBlank() && sessionID.isNotBlank()) {
+//                addHeader("Cookie", "csrftoken=$csrftoken; sessionid=$sessionID")
+//            }
             build()
         }
         client.newCall(request).enqueue(GetOtherPostUrlCallback())
@@ -246,7 +253,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                                 obj = context.resources.getString(R.string.download_complete)
                             })
                         }
-                        callback.sendSingleProgress(singleTask.completed)
+                        callback.sendInsSingleProgress(singleTask.completed)
                     }
 
                     else -> {
@@ -283,16 +290,32 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     200 -> {
                         response.body?.let { body ->
                             val code = body.string()
-                            val patternUrl =
-                                Pattern.compile("\"src\":\"(.{150,400}?)\",\"config_width\":1080,\"config_height\":.{3,5}")
+                            val regex = "(\\{\"graphql\":.*?)\\);</script><script type=\"text/javascript\">"
+                            val patternUrl = Pattern.compile(regex)
+                                //Pattern.compile("\"src\":\"(.{150,400}?)\",\"config_width\":1080,\"config_height\":.{3,5}")
                             val list = mutableListOf<String>()
                             with(patternUrl.matcher(code)) {
-                                while (find()) {
-                                    group(1)!!.replace("\\u0026", "&").also { s ->
-                                        println(s)
-                                        if (!list.contains(s)) list.add(s)
+//                                while (find()) {
+//                                    group(1)!!.replace("\\u0026", "&").also { s ->
+//                                        println(s)
+//                                        if (!list.contains(s)) list.add(s)
+//                                    }
+//                                }
+
+                                if (find()) {
+                                    val postPage = Gson().fromJson(group(1), PostPage::class.java)
+                                    if (postPage.graphql.shortcode_media.edge_sidecar_to_children == null) {
+                                        list.add(postPage.graphql.shortcode_media.display_url)
+                                    } else {
+                                        for (i in postPage.graphql.shortcode_media.edge_sidecar_to_children.edges) {
+                                            list.add(i.node.display_url)
+                                        }
+                                    }
+                                    for (i in list) {
+                                        println(i)
                                     }
                                 }
+
                                 singleTask.urls = list
                             }
                             if (list.isNullOrEmpty()) {
@@ -309,7 +332,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                                         println(group(1))
                                     }
                                 }
-                                callback.sendSingleCount(list.size)
+                                callback.sendInsSingleCount(list.size)
                                 Thread.sleep(500L)
                                 for (i in list.indices) {
                                     saveImg(list[i], i)
@@ -343,7 +366,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
     inner class GetOtherPostUrlCallback : Callback {
         override fun onFailure(call: Call, e: IOException) {
             println("getImgUrlInOtherPost onFailure：")
-            callback.sendMessage("获取后续Post图片URL失败 onFailure : $e")
+            callback.sendInsMessage("获取后续Post图片URL失败 onFailure : $e")
             e.printStackTrace()
             client.newCall(call.request()).enqueue(GetOtherPostUrlCallback())
         }
@@ -358,16 +381,18 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         if (medias.edges.isNotEmpty()) {
                             val list = allTask.urls.toMutableList()
                             for (i in medias.edges) {
-                                if (!list.contains(i.node.display_url)) list.add(i.node.display_url)
+                                // 只有1张图片时 edge_sidecar_to_children 才为 null
                                 if (i.node.edge_sidecar_to_children != null) {
                                     for (j in i.node.edge_sidecar_to_children.edges) {
                                         if (!list.contains(j.node.display_url)) list.add(j.node.display_url)
                                     }
+                                } else {
+                                    if (!list.contains(i.node.display_url)) list.add(i.node.display_url)
                                 }
                             }
                             allTask.urls = list
                         } else {
-                            callback.sendMessage("获取后续Post图片URL失败：未发现图片")
+                            callback.sendInsMessage("获取后续Post图片URL失败：未发现图片")
                             println("获取后续Post图片URL失败：没有图片")
                         }
                         allTask.endCursor = medias.page_info.end_cursor
@@ -380,34 +405,34 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     }
 
                     400 -> {
-                        callback.sendMessage("获取后续Post图片URL错误：400 Bad Request")
+                        callback.sendInsMessage("获取后续Post图片URL错误：400 Bad Request")
                         println("获取后续Post图片URL错误：400 Bad Request")
                         println(call.request().url.toString())
                         client.newCall(call.request()).enqueue(GetOtherPostUrlCallback())
                     }
 
                     410 -> {  // 410 Gone  被请求的资源在服务器上已经不再可用，而且没有任何已知的转发地址。
-                        callback.sendMessage("获取后续Post图片URL错误：410 Gone")
+                        callback.sendInsMessage("获取后续Post图片URL错误：410 Gone")
                         println("获取后续Post图片URL错误：410 Gone")
                         allTask.postCount = 0
                         getImgUrlInOtherPost()
                     }
 
                     429 -> {
-                        callback.sendMessage("获取后续Post图片URL错误：429 Too Many Requests")
+                        callback.sendInsMessage("获取后续Post图片URL错误：429 Too Many Requests")
                         println("获取后续Post图片URL错误：429 Too Many Requests")
                         Thread.sleep(1000L)
                         client.newCall(call.request()).enqueue(GetOtherPostUrlCallback())
                     }
 
                     else -> {
-                        callback.sendMessage("获取后续Post图片URL错误：${response.code}")
+                        callback.sendInsMessage("获取后续Post图片URL错误：${response.code}")
                         println("获取后续Post图片URL错误：${response.code}")
                         client.newCall(call.request()).enqueue(GetOtherPostUrlCallback())
                     }
                 }
             } catch (e: Exception) {
-                callback.sendMessage("获取后续Post图片URL发生异常：$e")
+                callback.sendInsMessage("获取后续Post图片URL发生异常：$e")
                 println("获取后续Post图片URL发生异常：")
                 e.printStackTrace()
             } finally {
@@ -418,7 +443,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 
     inner class DownAllCallback : Callback {
         override fun onFailure(call: Call, e: IOException) {
-            callback.sendMessage("获取第1个至第12个Post的图片URL onFailure : $e")
+            callback.sendInsMessage("获取第1个至第12个Post的图片URL onFailure : $e")
             println("获取第1个至第12个Post的图片URL 失败 onFailure : ")
             e.printStackTrace()
             // 重试次数
@@ -437,16 +462,16 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         if (matcher1.find()) {
                             allTask.user = matcher1.group(1) ?: ""
                             if (allTask.user == "accounts/login" || allTask.user == "") {
-                                callback.sendMessage("未登陆 或 登录状态已失效！")
+                                callback.sendInsMessage("未登陆 或 登录状态已失效！")
                                 allTask.isCompleted = true
                                 return
                             } else {
-                                callback.sendUser(allTask.user)
-                                callback.sendMessage("开始搜索 ${allTask.user} 发布的所有图片......")
+                                callback.sendInsUser(allTask.user)
+                                callback.sendInsMessage("开始搜索 ${allTask.user} 发布的所有图片......")
                             }
                         } else {
                             println("未找到用户！")
-                            callback.sendMessage("未登陆 或 登录状态已失效！")
+                            callback.sendInsMessage("未登陆 或 登录状态已失效！")
                             allTask.isCompleted = true
                             return
                         }
@@ -472,18 +497,20 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 
                             val list = mutableListOf<String>()
                             for (i in medias.edges) {
-                                if (!list.contains(i.node.display_url)) list.add(i.node.display_url)
+                                // 只有1张图片时 edge_sidecar_to_children 才为 null
                                 if (i.node.edge_sidecar_to_children != null) {
                                     for (j in i.node.edge_sidecar_to_children.edges) {
                                         if (!list.contains(j.node.display_url)) list.add(j.node.display_url)
                                     }
+                                } else {
+                                    if (!list.contains(i.node.display_url)) list.add(i.node.display_url)
                                 }
                             }
                             allTask.urls = list
                         }
 
                         if (allTask.urls.isEmpty()) {
-                            callback.sendMessage("没有发现图片......")
+                            callback.sendInsMessage("没有发现图片......")
                             allTask.isCompleted = true
                             callback.stopForeground()
                             return
@@ -492,16 +519,16 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         getImgUrlInOtherPost()
                     }
                     404 -> {
-                        callback.sendMessage("获取第1个至第12个Post的图片URL 错误：404")
+                        callback.sendInsMessage("获取第1个至第12个Post的图片URL 错误：404")
                         println("获取第1个至第12个Post的图片URL 错误：404")
                     }
                     else -> {
-                        callback.sendMessage("获取第1个至第12个Post的图片URL 错误：${response.code}")
+                        callback.sendInsMessage("获取第1个至第12个Post的图片URL 错误：${response.code}")
                         println("获取第1个至第12个Post的图片URL 错误：${response.code}")
                     }
                 }
             } catch (e: Exception) {
-                callback.sendMessage("获取第1个至第12个Post的图片URL发生异常: $e")
+                callback.sendInsMessage("获取第1个至第12个Post的图片URL发生异常: $e")
                 println("user = ${allTask.user}")
                 println("获取第1个至第12个Post的图片URL发生异常: $e")
                 e.printStackTrace()
@@ -515,7 +542,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 
     inner class SaveImgInAllCallback(val index: Int) : Callback {
         override fun onFailure(call: Call, e: IOException) {
-            callback.sendMessage("下载第 $index 张图片 onFailure：$e")
+            callback.sendInsMessage("下载第 $index 张图片 onFailure：$e")
             println("下载第 $index 张图片 onFailure：")
             e.printStackTrace()
 
@@ -526,7 +553,7 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             try {
                 when (response.code) {
                     200 -> {
-                        val fileName = allTask.time + "_$index.jpg"
+                        val fileName = allTask.time + "_${String.format("%0${allTask.nameFormat}d", index)}.jpg"
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val relativeLocation =
@@ -553,16 +580,16 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         }
 
                         if (allTask.completedOne()) {
-                            callback.sendMessage("${context.resources.getString(R.string.download_complete)}......")
+                            callback.sendInsMessage("${context.resources.getString(R.string.download_complete)}......")
                             callback.stopForeground()
                         }
-                        callback.sendProgress(allTask.completed)
+                        callback.sendInsProgress(allTask.completed)
 
                         // 顺序模式
-                        if (index + 1 < allTask.urls.size) {
-                            client.newCall(requestBuilder.url(allTask.urls[index + 1]).build())
-                                .enqueue(SaveImgInAllCallback(index + 1))
-                        }
+//                        if (index + 1 < allTask.urls.size) {
+//                            client.newCall(requestBuilder.url(allTask.urls[index + 1]).build())
+//                                .enqueue(SaveImgInAllCallback(index + 1))
+//                        }
                         // 速度模式
                         /*if (index + 21 < task.urls.size) {
                             client.newCall(requestBuilder.url(task.urls[index + 21]).build())
@@ -571,13 +598,13 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     }
 
                     410 -> {  // Gone
-                        callback.sendMessage("下载第 $index 张图片 错误：410 Gone")
+                        callback.sendInsMessage("下载第 $index 张图片 错误：410 Gone")
                         println("下载第 $index 张图片 错误：410 Gone")
                         if (allTask.completedOne()) {
-                            callback.sendMessage("${context.resources.getString(R.string.download_complete)}......")
+                            callback.sendInsMessage("${context.resources.getString(R.string.download_complete)}......")
                             callback.stopForeground()
                         }
-                        callback.sendProgress(allTask.completed)
+                        callback.sendInsProgress(allTask.completed)
 
                         if (index + 1 < allTask.urls.size) {
                             client.newCall(requestBuilder.url(allTask.urls[index + 1]).build())
@@ -590,20 +617,20 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     }
 
                     429 -> {  // 429 Too Many Requests
-                        callback.sendMessage("下载第 $index 张图片 错误：429 Too Many Requests")
+                        callback.sendInsMessage("下载第 $index 张图片 错误：429 Too Many Requests")
                         println("下载第 $index 张图片 错误：429 Too Many Requests")
                         Thread.sleep(1000L)
                         client.newCall(call.request()).enqueue(SaveImgInAllCallback(index))
                     }
 
                     else -> {
-                        callback.sendMessage("下载第 $index 张图片 错误：${response.code}")
+                        callback.sendInsMessage("下载第 $index 张图片 错误：${response.code}")
                         println("下载第 $index 张图片 错误：${response.code}")
                         client.newCall(call.request()).enqueue(SaveImgInAllCallback(index))
                     }
                 }
             } catch (e: Exception) {
-                callback.sendMessage("下载第 $index 张图片 发生异常：$e")
+                callback.sendInsMessage("下载第 $index 张图片 发生异常：$e")
                 println("下载第 $index 张图片 发生异常：")
                 e.printStackTrace()
                 client.newCall(call.request()).enqueue(SaveImgInAllCallback(index))
@@ -617,15 +644,3 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 
 }
 
-interface DownloadCallback {
-    fun sendCount(count: Int)
-    fun sendUser(user: String)
-    fun sendProgress(progress: Int)
-    fun sendMessage(msg: String)
-
-    fun sendSingleProgress(p: Int)
-    fun sendSingleCount(c: Int)
-
-    fun startForeground() {}
-    fun stopForeground() {}
-}

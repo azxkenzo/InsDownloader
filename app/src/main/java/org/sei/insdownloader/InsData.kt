@@ -27,3 +27,7 @@ data class JsonData(val data: Data)
 data class Data(val user: User1)
 
 data class User1(val edge_owner_to_timeline_media: TimeLineMedia)
+
+data class PostPage(val graphql: Graphql1)
+
+data class Graphql1(val shortcode_media: Node)

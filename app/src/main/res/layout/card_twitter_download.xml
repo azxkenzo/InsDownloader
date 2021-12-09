@@ -12,86 +12,72 @@
         android:layout_height="wrap_content"
         android:padding="8dp">
 
-        <Button
-            android:id="@+id/btn_down_all"
+        <TextView
+            android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/btn_download_txt"
-            android:textColor="@color/button_text_color"
-            android:backgroundTint="@color/button_progress_color"
-            app:layout_constraintEnd_toEndOf="parent"
+            android:text="Twitter Download"
+            android:textColor="@color/titleColor"
+            app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/download_all_txt"
-            android:textColor="@color/titleColor"
-            app:layout_constraintBottom_toBottomOf="@id/btn_down_all"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@id/btn_down_all" />
-
         <com.google.android.material.textfield.TextInputLayout
-            android:id="@+id/text_input"
+            android:id="@+id/twitter_text_input"
             style="@style/Widget.Shrine.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="@string/profile_url"
+            android:hint="User Name"
             app:endIconMode="clear_text"
-            app:layout_constraintTop_toBottomOf="@id/btn_down_all">
+            app:layout_constraintTop_toBottomOf="@id/title">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/edit_text"
+                android:id="@+id/twitter_edit_text"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
         </com.google.android.material.textfield.TextInputLayout>
 
-        <TextView
-            android:id="@+id/user"
+        <Button
+            android:id="@+id/twitter_down_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="user"
+            android:backgroundTint="@color/button_progress_color"
+            android:text="IMAGE"
+            android:textColor="@color/button_text_color"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_input" />
+            app:layout_constraintTop_toBottomOf="@id/twitter_text_input" />
 
-        <TextView
-            android:id="@+id/progress"
+        <Button
+            android:id="@+id/twitter_down_video"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text="0"
-            app:layout_constraintEnd_toStartOf="@id/count"
-            app:layout_constraintTop_toBottomOf="@id/text_input" />
+            android:layout_marginStart="12dp"
+            android:backgroundTint="@color/button_progress_color"
+            android:text="VIDEO"
+            android:textColor="@color/button_text_color"
+            app:layout_constraintStart_toEndOf="@id/twitter_down_image"
+            app:layout_constraintTop_toBottomOf="@id/twitter_text_input" />
 
-        <TextView
-            android:id="@+id/count"
+        <Button
+            android:id="@+id/weibo_download"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:text=" / 0"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/text_input" />
+            android:layout_marginStart="24dp"
+            android:backgroundTint="@color/button_progress_color"
+            android:text="WEIBO"
+            android:textColor="@color/button_text_color"
+            app:layout_constraintStart_toEndOf="@id/twitter_down_video"
+            app:layout_constraintTop_toBottomOf="@id/twitter_text_input" />
 
         <ProgressBar
-            android:id="@+id/progressBar_main"
+            android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
             android:layout_height="4dp"
             android:layout_marginHorizontal="12dp"
             android:layout_marginTop="8dp"
             android:progressTint="@color/button_progress_color"
-            app:layout_constraintTop_toBottomOf="@id/user" />
-
-        <TextView
-            android:id="@+id/logcat"
-            android:layout_width="match_parent"
-            android:background="@drawable/bg_logcat"
-            android:layout_height="300dp"
-            android:layout_marginTop="8dp"
-            android:paddingHorizontal="16dp"
-            app:layout_constraintTop_toBottomOf="@id/progressBar_main" />
+            app:layout_constraintTop_toBottomOf="@id/twitter_down_video" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

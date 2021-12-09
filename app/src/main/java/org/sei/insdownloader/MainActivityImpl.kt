@@ -8,6 +8,7 @@ import android.content.ServiceConnection
 import android.content.pm.PackageManager
 import android.os.*
 import android.text.Editable
+import android.text.TextUtils
 import android.text.TextWatcher
 import android.text.method.ScrollingMovementMethod
 import android.view.inputmethod.InputMethodManager
@@ -20,66 +21,48 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
     private val activity = WeakReference(mActivity)
 
     fun onCreate() {
-        activity.get()?.let { a ->
-            a.bindService(
-                Intent(a, DownloadService::class.java),
+        activity.get()?.let { aty ->
+            aty.bindService(
+                Intent(aty, DownloadService::class.java),
                 DownServiceConnection,
                 Context.BIND_AUTO_CREATE
             )
 
-            with(a.viewBinding) {
+            with(aty.viewBinding) {
                 cardDownAll.logcat.movementMethod = ScrollingMovementMethod.getInstance()
 
                 cardDownAll.editText.addTextChangedListener(object : TextWatcher {
-                    override fun beforeTextChanged(
-                        s: CharSequence?,
-                        start: Int,
-                        count: Int,
-                        after: Int
-                    ) {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
 
-                    }
-
-                    override fun onTextChanged(
-                        s: CharSequence?,
-                        start: Int,
-                        before: Int,
-                        count: Int
-                    ) {
-
-                    }
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
 
                     override fun afterTextChanged(s: Editable?) {
                         if (cardDownAll.textInput.error != null) {
                             cardDownAll.textInput.error = null
                         }
                     }
-
                 })
 
                 cardDownSingle.btnDownSingle.setOnClickListener {
                     val vibrator = it.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                     vibrator.vibrate(VibrationEffect.createOneShot(10L, 150))
 
-                    if (a.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                a.requestPermissions(
-                                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                                    0
-                                )
+                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
                             }
                             .show()
                     } else {
-                        val url = getClipboardContent(a)
+                        val url = getClipboardContent(aty)
                         if (checkSingleUrlValid(url)) {
-                            a.startService(Intent(a, DownloadService::class.java).apply {
+                            aty.startService(Intent(aty, DownloadService::class.java).apply {
                                 putExtra(KEY_ACTION, ACTION_DOWN_SINGLE)
                                 putExtra(KEY_DATA, url)
                             })
                         } else {
-                            Toast.makeText(a, "无效Ins链接！", Toast.LENGTH_LONG).show()
+                            Toast.makeText(aty, "无效Ins链接！", Toast.LENGTH_LONG).show()
                         }
                     }
                 }
@@ -91,16 +74,16 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                     cardDownAll.progress.text = "0"
                     cardDownAll.progressBarMain.progress = 0
 
-                    (a.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
+                    (aty.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(
                         it.windowToken,
                         0
                     )
 
-                    if (a.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                a.requestPermissions(
+                                aty.requestPermissions(
                                     arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                                     2
                                 )
@@ -108,12 +91,105 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                             .show()
                     } else {
                         if (checkAllUrlValid(cardDownAll.editText.text.toString())) {
-                            a.startService(Intent(a, DownloadService::class.java).apply {
+                            aty.startService(Intent(aty, DownloadService::class.java).apply {
                                 putExtra(KEY_ACTION, ACTION_DOWN_ALL)
                                 putExtra(KEY_DATA, cardDownAll.editText.text.toString())
                             })
                         } else {
                             cardDownAll.textInput.error = "无效Ins链接！"
+                        }
+                    }
+                }
+
+                cardTwitterDownload.twitterEditText.addTextChangedListener(object : TextWatcher {
+                    override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) { }
+
+                    override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) { }
+
+                    override fun afterTextChanged(s: Editable?) {
+                        if (cardTwitterDownload.twitterTextInput.error != null) {
+                            cardTwitterDownload.twitterTextInput.error = null
+                        }
+                    }
+                })
+
+                cardTwitterDownload.twitterDownImage.setOnClickListener {
+                    val vibrator = it.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    vibrator.vibrate(VibrationEffect.createOneShot(10L, 150))
+
+                    cardTwitterDownload.progressBar.progress = 0
+                    cardTwitterDownload.progressBar.max = 0
+
+                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        // Snackbar 向用户请求申请权限
+                        Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
+                            .setAction("申请") {
+                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
+                            }
+                            .show()
+                    } else {
+                        val username = cardTwitterDownload.twitterEditText.text.toString()
+                        if (!TextUtils.isEmpty(username)) {
+                            aty.startService(Intent(aty, DownloadService::class.java).apply {
+                                putExtra(KEY_ACTION, ACTION_TWITTER_DOWNLOAD_IMAGE)
+                                putExtra(KEY_DATA, username)
+                            })
+                        } else {
+                            cardDownAll.textInput.error = "请输入用户名！"
+                        }
+                    }
+                }
+
+                cardTwitterDownload.twitterDownVideo.setOnClickListener {
+                    val vibrator = it.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    vibrator.vibrate(VibrationEffect.createOneShot(10L, 150))
+
+                    cardTwitterDownload.progressBar.progress = 0
+                    cardTwitterDownload.progressBar.max = 0
+
+                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        // Snackbar 向用户请求申请权限
+                        Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
+                            .setAction("申请") {
+                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
+                            }
+                            .show()
+                    } else {
+                        val username = cardTwitterDownload.twitterEditText.text.toString()
+                        if (!TextUtils.isEmpty(username)) {
+                            aty.startService(Intent(aty, DownloadService::class.java).apply {
+                                putExtra(KEY_ACTION, ACTION_TWITTER_DOWNLOAD_VIDEO)
+                                putExtra(KEY_DATA, username)
+                            })
+                        } else {
+                            cardDownAll.textInput.error = "请输入用户名！"
+                        }
+                    }
+                }
+
+                cardTwitterDownload.weiboDownload.setOnClickListener {
+                    val vibrator = it.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                    vibrator.vibrate(VibrationEffect.createOneShot(10L, 150))
+
+                    cardTwitterDownload.progressBar.progress = 0
+                    cardTwitterDownload.progressBar.max = 0
+
+                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                        // Snackbar 向用户请求申请权限
+                        Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
+                            .setAction("申请") {
+                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
+                            }
+                            .show()
+                    } else {
+                        val url = cardTwitterDownload.twitterEditText.text.toString()
+                        if (!TextUtils.isEmpty(url)) {
+                            aty.startService(Intent(aty, DownloadService::class.java).apply {
+                                putExtra(KEY_ACTION, ACTION_WEIBO_DOWNLOAD)
+                                putExtra(KEY_DATA, url)
+                            })
+                        } else {
+                            cardDownAll.textInput.error = "请输入URL！"
                         }
                     }
                 }
@@ -159,7 +235,7 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
     private var progress = 0
     private var log = ""
 
-    override fun sendCount(count: Int) {
+    override fun sendInsCount(count: Int) {
         this.count = count
         activity.get()?.let {
             it.runOnUiThread {
@@ -169,7 +245,7 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
         }
     }
 
-    override fun sendUser(user: String) {
+    override fun sendInsUser(user: String) {
         this.user = user
         activity.get()?.let {
             it.runOnUiThread {
@@ -179,7 +255,7 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
         }
     }
 
-    override fun sendProgress(progress: Int) {
+    override fun sendInsProgress(progress: Int) {
         this.progress = progress
         activity.get()?.let {
             it.runOnUiThread {
@@ -201,7 +277,7 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
         }
     }
 
-    override fun sendMessage(msg: String) {
+    override fun sendInsMessage(msg: String) {
         activity.get()?.let {
             it.runOnUiThread {
                 it.viewBinding.cardDownAll.logcat.append("$msg \n")
@@ -211,7 +287,7 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
         }
     }
 
-    override fun sendSingleCount(c: Int) {
+    override fun sendInsSingleCount(c: Int) {
         activity.get()?.let {
             it.runOnUiThread {
                 it.viewBinding.cardDownSingle.btnDownSingle.setMax(c)
@@ -219,10 +295,26 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
         }
     }
 
-    override fun sendSingleProgress(p: Int) {
+    override fun sendInsSingleProgress(p: Int) {
         activity.get()?.let {
             it.runOnUiThread {
                 it.viewBinding.cardDownSingle.btnDownSingle.setProgress(p)
+            }
+        }
+    }
+
+    override fun sendTwitterCount(count: Int) {
+        activity.get()?.let {
+            it.runOnUiThread {
+                it.viewBinding.cardTwitterDownload.progressBar.max = count
+            }
+        }
+    }
+
+    override fun sendTwitterProgress(progress: Int) {
+        activity.get()?.let {
+            it.runOnUiThread {
+                it.viewBinding.cardTwitterDownload.progressBar.progress = progress
             }
         }
     }

@@ -4,6 +4,8 @@ import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.graphics.Typeface
+import android.graphics.Typeface.BOLD
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.LayerDrawable
 import android.util.AttributeSet
@@ -30,9 +32,10 @@ class DownloadButton : View {
     private val _text = "DOWNLOAD"
 
     private val textPaint by lazy { Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = ResourcesCompat.getColor(context.resources, R.color.black, null)
+        color = ResourcesCompat.getColor(context.resources, R.color.button_text_color, null)
         textSize = context.resources.getDimensionPixelOffset(R.dimen.buttonTextSize).toFloat()
-        letterSpacing = 0.05f
+        letterSpacing = 0.10f
+        typeface = Typeface.create(Typeface.DEFAULT, BOLD) // 字体类型、粗细
     } }
 
     private val textWidth by lazy {

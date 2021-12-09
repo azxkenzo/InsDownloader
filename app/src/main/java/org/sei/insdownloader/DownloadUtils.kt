@@ -6,9 +6,11 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import android.text.TextUtils
+import androidx.annotation.RequiresApi
 import java.io.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,11 +29,24 @@ data class Task(
     var first: Int = 0,
     var userID: String = "",
     var postCount: Int = 0,
-    var completed: Int = 0,
-    var isCompleted: Boolean = true,
+    @Volatile var completed: Int = 0,
+    @Volatile var isCompleted: Boolean = true,
+    ) {
+    val time: String = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date())
 
-) {
-    val time: String = SimpleDateFormat("yyyyMMddHHmmssSSS", Locale.CHINA).format(Date());
+    var nameFormat: Int = 1
+        set(value) {
+            var x = value
+            var y = 1
+            while (x / 10 > 0) {
+                y++
+                x /= 10
+            }
+            field = y
+        }
+
+    @Volatile
+    var untilId = ""
 
     @Synchronized
     fun completedOne(): Boolean {
@@ -41,6 +56,9 @@ data class Task(
 
         return isCompleted
     }
+
+
+    var weiboPage = 0
 }
 
 fun getClipboardContent(context: Context): String {
@@ -70,7 +88,7 @@ fun getStackTrace(e: Exception): String {
 
 fun saveImgOnQ(
     context: Context,
-    callback: DownloadCallback,
+    callback: DownloadCallback?,
     relativeLocation: String,
     fileName: String,
     bitmap: Bitmap,
@@ -97,13 +115,73 @@ fun saveImgOnQ(
         if (!bitmap.compress(format, 95, outputStream)) {
             throw IOException("Failed to save bitmap.")
         }
+
         outputStream.flush()
         println("保存图片成功")
     } catch (e: Exception) {
         if (imgUri != null) context.contentResolver.delete(imgUri, null, null)
         e.printStackTrace()
-        callback.sendMessage("图片保存异常：${getStackTrace(e)}")
+        callback?.sendInsMessage("图片保存异常：${getStackTrace(e)}")
     } finally {
+        outputStream?.close()
+    }
+}
+
+@RequiresApi(Build.VERSION_CODES.Q)
+fun saveVideoOnQ(
+    context: Context,
+    inputStream: InputStream,
+    callback: DownloadCallback?,
+    relativeLocation: String,
+    fileName: String,
+    mimeType: String = "image/jpeg",
+    contentLength: Long
+) {
+    var videoUri: Uri? = null
+    var outputStream: OutputStream? = null
+    var bufferedOutputStream: BufferedOutputStream? = null
+    try {
+        // 创建 ContentValues    包括：DISPLAY_NAME、MIME_TYPE、RELATIVE_PATH
+        val contentValues = ContentValues().apply {
+            put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
+            put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
+            put(MediaStore.MediaColumns.RELATIVE_PATH, relativeLocation)
+            put(MediaStore.MediaColumns.SIZE, contentLength)
+        }
+        // 创建 Uri
+        val contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
+        videoUri = context.contentResolver.insert(contentUri, contentValues)
+            ?: throw IOException("Failed to insert img.")
+        // 获取 OutputStream
+        outputStream = context.contentResolver.openOutputStream(videoUri)
+            ?: throw IOException("Failed to get output stream.")
+        // 输出到文件
+      //  bufferedOutputStream = BufferedOutputStream(outputStream)
+        val byteArray = ByteArray(1024)
+        var readNum = 0
+        var readCount = 0
+        do {
+            readCount = inputStream.read(byteArray)
+            if (readCount > 0) {
+                readNum += readCount
+                //println(readCount)
+                outputStream.write(byteArray, 0, readCount)
+               // Thread.sleep(50)
+                outputStream.flush()
+            }
+
+        } while (readCount != -1)
+
+        bufferedOutputStream?.flush()
+
+        outputStream.flush()
+        println("保存视频成功  readNum: $readNum  contentLength: $contentLength")
+    } catch (e: Exception) {
+        if (videoUri != null) context.contentResolver.delete(videoUri, null, null)
+        e.printStackTrace()
+        callback?.sendInsMessage("视频保存异常：${getStackTrace(e)}")
+    } finally {
+        bufferedOutputStream?.close()
         outputStream?.close()
     }
 }

@@ -19,7 +19,7 @@
 
 
 
-    <color name="actionBarColor">#FF101010</color>
+    <color name="background">#FF101010</color>
     <color name="titleColor">#FFFFFFFF</color>
     <color name="logcat_bg_color">#FF202020</color>
 </resources>

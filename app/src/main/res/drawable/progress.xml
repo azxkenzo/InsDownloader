@@ -13,7 +13,7 @@
         android:gravity="center_vertical|fill_horizontal">
         <scale android:scaleWidth="100%">
             <shape android:shape="rectangle"
-                android:tint="@color/teal_200">
+                android:tint="@color/button_progress_color">
                 <corners android:radius="8dp" />
                 <solid android:color="@color/white" />
             </shape>
