@@ -227,7 +227,8 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val relativeLocation =
                                 Environment.DIRECTORY_PICTURES + File.separator + "InsDownloader" + File.separator + singleTask.user
-                            val bitMap: Bitmap? = BitmapFactory.decodeStream(response.body!!.byteStream())
+                            val bitMap: Bitmap? =
+                                BitmapFactory.decodeStream(response.body!!.byteStream())
                             if (bitMap == null) {
                                 client.newCall(call.request()).enqueue(SaveImgCallback(index))
                                 return
@@ -290,9 +291,10 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
                     200 -> {
                         response.body?.let { body ->
                             val code = body.string()
-                            val regex = "(\\{\"graphql\":.*?)\\);</script><script type=\"text/javascript\">"
+                            //val regex = "(\\{\"graphql\":.*?)\\);</script><script type=\"text/javascript\">"
+                            val regex = "\\{\"items\":\\[\\{.*,\"num_results\""
                             val patternUrl = Pattern.compile(regex)
-                                //Pattern.compile("\"src\":\"(.{150,400}?)\",\"config_width\":1080,\"config_height\":.{3,5}")
+                            //Pattern.compile("\"src\":\"(.{150,400}?)\",\"config_width\":1080,\"config_height\":.{3,5}")
                             val list = mutableListOf<String>()
                             with(patternUrl.matcher(code)) {
 //                                while (find()) {
@@ -303,16 +305,36 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
 //                                }
 
                                 if (find()) {
-                                    val postPage = Gson().fromJson(group(1), PostPage::class.java)
-                                    if (postPage.graphql.shortcode_media.edge_sidecar_to_children == null) {
-                                        list.add(postPage.graphql.shortcode_media.display_url)
+                                    val json = group().replace(",\"num_results\"", "}")
+//                                    val postPage = Gson().fromJson(group(1), PostPage::class.java)
+//                                    if (postPage.graphql.shortcode_media.edge_sidecar_to_children == null) {
+//                                        list.add(postPage.graphql.shortcode_media.display_url)
+//                                    } else {
+//                                        for (i in postPage.graphql.shortcode_media.edge_sidecar_to_children.edges) {
+//                                            list.add(i.node.display_url)
+//                                        }
+//                                    }
+//                                    for (i in list) {
+//                                        println(i)
+//                                    }
+
+                                    val postPage2 = Gson().fromJson(json, PostPage2::class.java)
+                                    println("postPage2 item count = ${postPage2.items.size}")
+                                    if (postPage2.items[0].image_versions2 != null) {
+                                        println(postPage2.items[0].image_versions2!!.candidates[0].width)
+                                        println(postPage2.items[0].image_versions2!!.candidates[0].height)
+                                        println(postPage2.items[0].image_versions2!!.candidates[0].url)
+                                        list.add(postPage2.items[0].image_versions2!!.candidates[0].url.replace("\\u0026", "&"))
                                     } else {
-                                        for (i in postPage.graphql.shortcode_media.edge_sidecar_to_children.edges) {
-                                            list.add(i.node.display_url)
+                                        if (postPage2.items[0].carousel_media != null) {
+                                            postPage2.items[0].carousel_media!![0].image_versions2
+                                            println(postPage2.items[0].carousel_media!![0].image_versions2.candidates[0].width)
+                                            println(postPage2.items[0].carousel_media!![0].image_versions2.candidates[0].height)
+                                            println(postPage2.items[0].carousel_media!![0].image_versions2.candidates[0].url)
+                                            for (i in postPage2.items[0].carousel_media!!) {
+                                                list.add(i.image_versions2.candidates[0].url.replace("\\u0026", "&"))
+                                            }
                                         }
-                                    }
-                                    for (i in list) {
-                                        println(i)
                                     }
                                 }
 
@@ -553,12 +575,18 @@ class Downloader(private val callback: DownloadCallback, private val context: Co
             try {
                 when (response.code) {
                     200 -> {
-                        val fileName = allTask.time + "_${String.format("%0${allTask.nameFormat}d", index)}.jpg"
+                        val fileName = allTask.time + "_${
+                            String.format(
+                                "%0${allTask.nameFormat}d",
+                                index
+                            )
+                        }.jpg"
 
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                             val relativeLocation =
                                 Environment.DIRECTORY_PICTURES + File.separator + "InsDownloader" + File.separator + allTask.user
-                            val bitMap: Bitmap? = BitmapFactory.decodeStream(response.body!!.byteStream())
+                            val bitMap: Bitmap? =
+                                BitmapFactory.decodeStream(response.body!!.byteStream())
                             if (bitMap == null) {
                                 client.newCall(call.request()).enqueue(SaveImgInAllCallback(index))
                                 return

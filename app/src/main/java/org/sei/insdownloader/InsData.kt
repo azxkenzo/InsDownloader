@@ -31,3 +31,9 @@ data class User1(val edge_owner_to_timeline_media: TimeLineMedia)
 data class PostPage(val graphql: Graphql1)
 
 data class Graphql1(val shortcode_media: Node)
+
+data class PostPage2(val items: List<Item>)
+data class Item(val image_versions2: ImageVersions2?, val carousel_media_count: Int?, val carousel_media: List<CarouselMedia>?)
+data class CarouselMedia(val image_versions2: ImageVersions2)
+data class ImageVersions2(val candidates: List<Candidate>)
+data class Candidate(val width: Int, val height: Int, val url: String)
