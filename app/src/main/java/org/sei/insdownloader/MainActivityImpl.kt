@@ -47,13 +47,24 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                     val vibrator = it.context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
                     vibrator.vibrate(VibrationEffect.createOneShot(10L, 150))
 
-                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
-                            }
-                            .show()
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO
+                                        ), 1
+                                    )
+                                } else {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        ), 1
+                                    )
+                                }
+                            }.show()
                     } else {
                         val url = getClipboardContent(aty)
                         if (checkSingleUrlValid(url)) {
@@ -79,14 +90,23 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                         0
                     )
 
-                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                aty.requestPermissions(
-                                    arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
-                                    2
-                                )
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO
+                                        ), 1
+                                    )
+                                } else {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        ), 1
+                                    )
+                                }
                             }
                             .show()
                     } else {
@@ -120,11 +140,23 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                     cardTwitterDownload.progressBar.progress = 0
                     cardTwitterDownload.progressBar.max = 0
 
-                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO
+                                        ), 1
+                                    )
+                                } else {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        ), 1
+                                    )
+                                }
                             }
                             .show()
                     } else {
@@ -147,11 +179,23 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                     cardTwitterDownload.progressBar.progress = 0
                     cardTwitterDownload.progressBar.max = 0
 
-                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO
+                                        ), 1
+                                    )
+                                } else {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        ), 1
+                                    )
+                                }
                             }
                             .show()
                     } else {
@@ -174,11 +218,23 @@ class MainActivityImpl(mActivity: MainActivity) : DownloadCallback {
                     cardTwitterDownload.progressBar.progress = 0
                     cardTwitterDownload.progressBar.max = 0
 
-                    if (aty.checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    if (aty.checkSelfPermission(Manifest.permission.READ_MEDIA_IMAGES) != PackageManager.PERMISSION_GRANTED) {
                         // Snackbar 向用户请求申请权限
                         Snackbar.make(root, "下载图片需要存储权限，现在申请吗？", Snackbar.LENGTH_LONG)
                             .setAction("申请") {
-                                aty.requestPermissions(arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE), 0)
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.READ_MEDIA_VIDEO
+                                        ), 1
+                                    )
+                                } else {
+                                    aty.requestPermissions(
+                                        arrayOf(
+                                            Manifest.permission.READ_EXTERNAL_STORAGE
+                                        ), 1
+                                    )
+                                }
                             }
                             .show()
                     } else {

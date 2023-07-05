@@ -159,7 +159,7 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                         println("tweet count  ${timelinesResponse.meta.result_count}")
                         imageTask.untilId = timelinesResponse.meta.oldest_id ?: ""
                         timelinesResponse.includes?.let { includes ->
-                            val urls = includes.media.filter { it.url != null }.map { it.url!! }
+                            val urls = includes.media.filter { it.url != null }.map { DownloadMedia(0, it.url!!, 0) }
                             imageTask.urls = imageTask.urls.toMutableList().apply { addAll(urls) }.toList()
                         }
 
@@ -215,7 +215,7 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                         val jsonArray = JsonParser.parseString(json).asJsonArray
                         if (!jsonArray.isEmpty) {
                             if (jsonArray.size() > 1 || gson.fromJson(jsonArray.first(), TweetV101::class.java).id != videoTask.untilId) {
-                                val urls = mutableListOf<String>()
+                                val urls = mutableListOf<DownloadMedia>()
                                 for (i in jsonArray) {
                                     val tweetV101 = gson.fromJson(i, TweetV101::class.java)
                                     if (tweetV101.id == videoTask.untilId) continue
@@ -229,7 +229,7 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                                             }
                                         }
                                         println(url)
-                                        urls.add(url)
+                                        urls.add(DownloadMedia(0, url, 0))
                                     }
                                 }
                                 videoTask.untilId = gson.fromJson(jsonArray.last(), TweetV101::class.java).id
@@ -244,7 +244,7 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                                 videoTask.nameFormat = videoTask.urls.size
                                 callback.sendTwitterCount(videoTask.urls.size)
                                 callback.startForeground()
-                                client.newCall(twitterRequestBuilder.url(videoTask.urls[0]).build()).enqueue(TwitterDownloadVideoCallback(0))
+                                client.newCall(twitterRequestBuilder.url(videoTask.urls[0].url).build()).enqueue(TwitterDownloadVideoCallback(0))
 
                             }
                         } else {
@@ -288,7 +288,8 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                             relativeLocation,
                             fileName,
                             bitMap,
-                            Bitmap.CompressFormat.JPEG
+                            Bitmap.CompressFormat.JPEG,
+                            dateTaken = 0
                         )
 
                         if (imageTask.completedOne()) {
@@ -332,14 +333,15 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                             relativeLocation,
                             fileName,
                             response.body!!.contentType().toString(),
-                            response.body!!.contentLength()
+                            response.body!!.contentLength(),
+                            0
                         )
 
                         if (videoTask.completedOne()) {
                             println("download completed")
                             callback.stopForeground()
                         } else {
-                            client.newCall(twitterRequestBuilder.url(videoTask.urls[index + 1]).build()).enqueue(TwitterDownloadVideoCallback(index + 1))
+                            client.newCall(twitterRequestBuilder.url(videoTask.urls[index + 1].url).build()).enqueue(TwitterDownloadVideoCallback(index + 1))
                         }
                         callback.sendTwitterProgress(videoTask.completed)
                     } catch (e: Exception) {
@@ -450,7 +452,7 @@ class TwitterDownloader(private val context: Context, private val callback: Down
 //                        println(i.getPicUrl())
 //                    }
                     println(getPicUrlsObject.data.photo_list.size)
-                    weiboTask.urls = getPicUrlsObject.data.photo_list.map { it.getPicUrl() }.toMutableList().apply { addAll(weiboTask.urls) }
+                   // weiboTask.urls = getPicUrlsObject.data.photo_list.map { it.getPicUrl() }.toMutableList().apply { addAll(weiboTask.urls) }
                     retrieveWeiboPicUrls(uid, albumid, page + 1)
                 } else if (weiboTask.urls.isNotEmpty()) {
                     println("getPicUrlsObject.data  ${getPicUrlsObject.data}")
@@ -460,7 +462,7 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                     callback.sendTwitterCount(weiboTask.urls.size)
                     callback.startForeground()
                     for (i in weiboTask.urls.indices) {
-                        client.newCall(builderWithoutCookie.url(weiboTask.urls[i]).build()).enqueue(WeiboDownloadCallback(i))
+                     //   client.newCall(builderWithoutCookie.url(weiboTask.urls[i]).build()).enqueue(WeiboDownloadCallback(i))
                     }
                 }
 
@@ -507,7 +509,8 @@ class TwitterDownloader(private val context: Context, private val callback: Down
                             relativeLocation,
                             fileName,
                             bitMap,
-                            Bitmap.CompressFormat.JPEG
+                            Bitmap.CompressFormat.JPEG,
+                            dateTaken = 0
                         )
 
                         if (weiboTask.completedOne()) {

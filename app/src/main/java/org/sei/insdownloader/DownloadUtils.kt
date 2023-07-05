@@ -23,9 +23,9 @@ enum class TaskType {
 }
 
 data class Task(
-    var urls: List<String> = listOf(),
+    var urls: List<DownloadMedia> = listOf(),
     var user: String = "unknown",
-    var endCursor: String? = "",
+    @Volatile var endCursor: String? = "",
     var first: Int = 0,
     var userID: String = "",
     var postCount: Int = 0,
@@ -72,7 +72,7 @@ fun getClipboardContent(context: Context): String {
 }
 
 fun checkSingleUrlValid(url: String?): Boolean {
-    return !TextUtils.isEmpty(url) && url!!.contains("https://www.instagram.com/p/")
+    return !TextUtils.isEmpty(url) && (url!!.contains("https://www.instagram.com/p/") || url.contains("https://www.instagram.com/reel/"))
 }
 
 fun checkAllUrlValid(url: String?): Boolean {
@@ -93,7 +93,8 @@ fun saveImgOnQ(
     fileName: String,
     bitmap: Bitmap,
     format: Bitmap.CompressFormat,
-    mimeType: String = "image/jpeg"
+    mimeType: String = "image/jpeg",
+    dateTaken: Int
 ) {
     var imgUri: Uri? = null
     var outputStream: OutputStream? = null
@@ -103,6 +104,9 @@ fun saveImgOnQ(
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, relativeLocation)
+            put(MediaStore.MediaColumns.DATE_TAKEN, dateTaken)
+            put(MediaStore.MediaColumns.DATE_ADDED, dateTaken)
+            put(MediaStore.MediaColumns.DATE_MODIFIED, dateTaken)
         }
         // 创建 Uri
         val contentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
@@ -134,8 +138,9 @@ fun saveVideoOnQ(
     callback: DownloadCallback?,
     relativeLocation: String,
     fileName: String,
-    mimeType: String = "image/jpeg",
-    contentLength: Long
+    mimeType: String = "video/mp4",
+    contentLength: Long,
+    dateTaken: Int
 ) {
     var videoUri: Uri? = null
     var outputStream: OutputStream? = null
@@ -147,6 +152,7 @@ fun saveVideoOnQ(
             put(MediaStore.MediaColumns.MIME_TYPE, mimeType)
             put(MediaStore.MediaColumns.RELATIVE_PATH, relativeLocation)
             put(MediaStore.MediaColumns.SIZE, contentLength)
+            put(MediaStore.MediaColumns.DATE_TAKEN, dateTaken)
         }
         // 创建 Uri
         val contentUri = MediaStore.Video.Media.EXTERNAL_CONTENT_URI
@@ -210,5 +216,26 @@ fun saveImgOnP(context: Context, user: String, fileName: String, byteArray: Byte
             )
         )
         println("保存图片成功")
+    }
+}
+
+fun getFileType(mimeType: String): String {
+    return when (mimeType) {
+        "video/mp4" -> {
+            "mp4"
+        }
+
+        "image/jpeg" -> {
+            "jpg"
+        }
+
+        "image/png" -> {
+            "png"
+        }
+
+        else -> {
+            println("getFileType: other type: $mimeType")
+            ""
+        }
     }
 }
